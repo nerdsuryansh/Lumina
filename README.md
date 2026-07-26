@@ -1,6 +1,5 @@
 <div align="center">
   <img src="logo.png" alt="Lumina Logo" width="100" />
-  <h1>Lumina</h1>
   <p><strong>A Smart Medical Report Visualizer & Explainer</strong></p>
   <p>Upload any medical lab report PDF and get instant AI-powered insights — summaries, status badges, visual range bars, and a chat assistant to answer your questions.</p>
 
@@ -130,5 +129,5 @@ MIT License — feel free to use this project for your own purposes.
 ---
 
 <div align="center">
-  Made with ❤️ by <strong>Suryansh</strong>
+  Made with ❤️ by <strong>Suryansh ;)</strong>
 </div>
