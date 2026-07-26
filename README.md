@@ -2,7 +2,7 @@
   
   <img width="100" height="100" alt="Plugin icon - 1" src="https://github.com/user-attachments/assets/71ea2a8b-3959-47ef-bd9e-8e6007b19656" />
   <p><strong>A Smart Medical Report Visualizer & Explainer</strong></p>
-  <p>Upload any medical lab report PDF and get instant AI-powered insights — summaries, status badges, visual range bars, and a chat assistant to answer your questions.</p>
+  <p>Upload any medical lab report PDF and get instant AI-powered insights like summaries, status badges, visual range bars, and a chat assistant to answer your questions.</p>
 
   ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)
   ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat&logo=fastapi&logoColor=white)
