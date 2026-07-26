@@ -1,5 +1,6 @@
 <div align="center">
-  <img src="logo.png" alt="Lumina Logo" width="100" />
+  
+  <img width="100" height="100" alt="Plugin icon - 1" src="https://github.com/user-attachments/assets/71ea2a8b-3959-47ef-bd9e-8e6007b19656" />
   <p><strong>A Smart Medical Report Visualizer & Explainer</strong></p>
   <p>Upload any medical lab report PDF and get instant AI-powered insights — summaries, status badges, visual range bars, and a chat assistant to answer your questions.</p>
 
@@ -12,26 +13,26 @@
 
 ---
 
-## ✨ Features
+## Features
 
-- **📄 PDF Upload & Preview** — Drag & drop or click to upload. The PDF renders live in the left panel.
-- **🧠 AI-Powered Analysis** — Gemini extracts all lab test results and generates a clinical summary automatically.
-- **📊 Visual Range Bars** — Each result shows a glowing dot on a bar indicating where the value falls relative to the normal range.
-- **🏷️ Status Badges** — Every test is classified as `Low`, `Normal`, or `High` with color-coded badges.
-- **💬 Ask Lumina AI** — Chat with an AI assistant about your report. Ask follow-up questions like *"What foods help improve my hemoglobin?"*
-- **🗂️ Report History** — All analyzed reports are saved locally. Revisit past results anytime.
-- **📈 Trend View** — Upload multiple reports over time and see how your lab values are trending on a chart.
-- **🖨️ Export PDF** — Print or save the analysis as a clean PDF report.
+- **PDF Upload & Preview** — Drag & drop or click to upload. The PDF renders live in the left panel.
+- **AI-Powered Analysis** — Gemini extracts all lab test results and generates a clinical summary automatically.
+- **Visual Range Bars** — Each result shows a glowing dot on a bar indicating where the value falls relative to the normal range.
+- **Status Badges** — Every test is classified as `Low`, `Normal`, or `High` with color-coded badges.
+- **Ask Lumina AI** — Chat with an AI assistant about your report. Ask follow-up questions like *"What foods help improve my hemoglobin?"*
+- **Report History** — All analyzed reports are saved locally. Revisit past results anytime.
+- **Trend View** — Upload multiple reports over time and see how your lab values are trending on a chart.
+- **Export PDF** — Print or save the analysis as a clean PDF report.
 
 ---
 
-## 🖼️ Preview
+## Preview
 
 > Upload a medical report → Get instant AI analysis with visual indicators and chat support.
 
 ---
 
-## 🏗️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -43,7 +44,7 @@
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Python 3.10+
@@ -108,7 +109,7 @@ Lumina/
 
 ---
 
-## 🔑 Environment Variables
+## Environment Variables
 
 | Variable | Description |
 |---|---|
@@ -116,15 +117,15 @@ Lumina/
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first.
 
 ---
 
-## 📄 License
+## License
 
-MIT License — feel free to use this project for your own purposes.
+Copyright (c) 2026 Suryansh Pareek. All Rights Reserved.
 
 ---
 
