@@ -9,6 +9,7 @@
   ![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react&logoColor=black)
   ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript&logoColor=white)
   ![Gemini](https://img.shields.io/badge/Gemini_AI-API-4285F4?style=flat&logo=google&logoColor=white)
+  ![Figma](https://img.shields.io/badge/Figma-F24E1E?style=flat&logo=figma&logoColor=white)
 </div>
 
 ---
@@ -36,6 +37,7 @@
 
 | Layer | Technology |
 |---|---|
+| **Design** | Custom Figma UI/UX Layout |
 | **Frontend** | React 18 + TypeScript + Vite |
 | **Backend** | Python + FastAPI + Uvicorn |
 | **AI** | Google Gemini API (`gemini-3.5-flash`) |
@@ -130,5 +132,5 @@ Copyright (c) 2026 Suryansh Pareek. All Rights Reserved.
 ---
 
 <div align="center">
-  Made with ❤️ by <strong>Suryansh ;)</strong>
+  Made with 💡 by <strong>Suryansh ;)</strong>
 </div>
