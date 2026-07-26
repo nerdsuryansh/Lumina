@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+
+# macOS
+.DS_Store
+
+# Vite build output
+dist/
+
+# Environment variables — never commit your real keys!
+.env
+.env.local
