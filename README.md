@@ -132,5 +132,5 @@ Copyright (c) 2026 Suryansh Pareek. All Rights Reserved.
 ---
 
 <div align="center">
-  Made with 💡 by <strong>Suryansh ;)</strong>
+  Made with ❤️ by <strong>Suryansh ;)</strong>
 </div>
