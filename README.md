@@ -1,5 +1,6 @@
 <div align="center">
   <img width="100" height="100" alt="Lumina logo" src="https://github.com/user-attachments/assets/71ea2a8b-3959-47ef-bd9e-8e6007b19656" />
+  <h1>Lumina</h1>
   <p><strong>A beautifully designed medical report visualizer and explainer.</strong></p>
   <p>Drop a lab report PDF to instantly parse, visualize, and understand your health data.</p>
 </div>
@@ -10,12 +11,7 @@
 
 Lumina turns dense, confusing medical PDF reports into clear, visual dashboards. Built for speed and privacy, it uses local parsing and fast LLMs to structure your data, highlight what needs attention, and let you ask natural questions about your health metrics.
 
-## Preview
-
-
-<video src="https://github.com/user-attachments/assets/cbc3d6fd-468b-4547-817c-365c012e58b3" autoplay loop muted playsinline width="100%"></video>
-
-
+![Lumina Demo](./public/demo.gif)
 
 ## Key Features
 
@@ -27,7 +23,7 @@ Lumina turns dense, confusing medical PDF reports into clear, visual dashboards.
 
 ## Tech Stack
 
-- **Frontend**: React 18, TypeScript, Vite, custom figma layout.
+- **Frontend**: React 18, TypeScript, Vite, custom Figma UI/UX layout.
 - **Backend**: Python, FastAPI, PyPDF2.
 - **AI Models**: Groq (`llama-3.3-70b-versatile`) for ultra-fast structured extraction and chat.
 
