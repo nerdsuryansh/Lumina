@@ -1,6 +1,6 @@
 <div align="center">
   <img width="100" height="100" alt="Lumina logo" src="https://github.com/user-attachments/assets/71ea2a8b-3959-47ef-bd9e-8e6007b19656" />
-  <p><strong>A beautifully designed medical report visualizer and explainer.</strong></p>
+  <p><strong>Medical reports, decoded.</strong></p>
   <p>Drop a lab report PDF to instantly parse, visualize, and understand your health data.</p>
 </div>
 
