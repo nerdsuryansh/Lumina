@@ -20,7 +20,7 @@ Lumina turns dense, confusing medical PDF reports into clear, visual dashboards.
 
 ## Tech Stack
 
-- **Frontend**: React 18, TypeScript, Vite, custom Figma UI/UX layout.
+- **Frontend**: React 18, TypeScript, Vite, custom figma layout.
 - **Backend**: Python, FastAPI, PyPDF2.
 - **AI Models**: Groq (`llama-3.3-70b-versatile`) for ultra-fast structured extraction and chat.
 
