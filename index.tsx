@@ -2,6 +2,9 @@ import {
     ChangeEvent, DragEvent, KeyboardEvent,
     useRef, useState, useEffect, useCallback
 } from "react";
+import ReactMarkdown from "react-markdown";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -52,6 +55,7 @@ const Icons = {
     trash: () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /></svg>,
     warn: () => <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /></svg>,
     check: () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>,
+    sparkles: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" /><path d="M20 3v4" /><path d="M22 5h-4" /><path d="M4 17v2" /><path d="M5 18H3" /></svg>,
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -72,7 +76,6 @@ const RangeBar = ({ value, normal_range, status }: { value: string; normal_range
     const rNums = extractNums(normal_range);
     if (!vNums.length || !rNums.length) return null;
 
-    const val = vNums[0];
     // Handle single-bound ranges like "<1.00" or "<20" — treat 0 as min
     const isUpperOnly = rNums.length === 1 || (
         normal_range.includes('<') && !normal_range.match(/\d+.*-.*\d+/)
@@ -80,6 +83,11 @@ const RangeBar = ({ value, normal_range, status }: { value: string; normal_range
     const rMin = isUpperOnly ? 0 : rNums[0];
     const rMax = isUpperOnly ? rNums[0] : rNums[rNums.length - 1];
     if (rMin >= rMax) return null;
+
+    // For "<X" values (e.g. "<1.00"), place dot at midpoint of valid range
+    // instead of at the upper boundary which looks wrong
+    const hasLessThanPrefix = /^</.test(value.trim());
+    const val = hasLessThanPrefix ? rMin + (rMax - rMin) * 0.35 : vNums[0];
 
     const span = rMax - rMin;
     const bMin = Math.max(0, rMin - span * 0.4);
@@ -164,15 +172,46 @@ export const Desktop = (): JSX.Element => {
     const [ctx, setCtx] = useState("");
     const [visible, setVisible] = useState<Set<number>>(new Set());
     const [lastFile, setLastFile] = useState<File | null>(null);
+    const [apiKeyErr, setApiKeyErr] = useState<{ type: "quota" | "invalid" | null }>({ type: null });
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [renderChat, setRenderChat] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
-    // Animate cards in one by one
+    const exportPdf = async () => {
+        setIsExporting(true);
+        try {
+            const el = document.getElementById("report-content");
+            if (!el) return;
+            const canvas = await html2canvas(el, { 
+                scale: 2, 
+                useCORS: true, 
+                backgroundColor: "#152331",
+                ignoreElements: (node) => node.classList && node.classList.contains("no-print")
+            });
+            const imgData = canvas.toDataURL("image/png");
+            const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [canvas.width / 2, canvas.height / 2] });
+            pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
+            pdf.save("Lumina_Medical_Report.pdf");
+        } catch (err) {
+            console.error(err);
+            alert("Failed to export PDF.");
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    useEffect(() => {
+        if (isChatOpen) setRenderChat(true);
+        else {
+            const t = setTimeout(() => setRenderChat(false), 200);
+            return () => clearTimeout(t);
+        }
+    }, [isChatOpen]);
+
+    // Animate cards in on data load via CSS (no opacity gating)
     useEffect(() => {
         if (!data) return;
-        setVisible(new Set());
-        const total = data.results.length + 2; // summary + results + chat
-        for (let i = 0; i < total; i++) {
-            setTimeout(() => setVisible(prev => new Set([...prev, i])), i * 130);
-        }
+        // nothing — CSS keyframes handle animation
     }, [data]);
 
     useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [chat]);
@@ -183,15 +222,33 @@ export const Desktop = (): JSX.Element => {
         setPdfUrl(URL.createObjectURL(file));
         const fd = new FormData(); fd.append("file", file);
         try {
-            const res = await fetch("http://127.0.0.1:8000/upload/", { method: "POST", body: fd });
-            if (!res.ok) throw new Error(`Server error ${res.status}`);
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 120000);
+            const res = await fetch("http://127.0.0.1:8000/upload/", { method: "POST", body: fd, signal: controller.signal });
+            clearTimeout(timeout);
+            if (res.status === 429) { setApiKeyErr({ type: "quota" }); setPdfUrl(null); setLoading(false); return; }
+            if (res.status === 401) { setApiKeyErr({ type: "invalid" }); setPdfUrl(null); setLoading(false); return; }
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                const msg = body.detail || `Server error ${res.status}`;
+                if (msg.includes("quota") || msg.includes("RESOURCE_EXHAUSTED")) { setApiKeyErr({ type: "quota" }); setPdfUrl(null); setLoading(false); return; }
+                if (msg.includes("UNAUTHENTICATED") || msg.includes("Invalid API key")) { setApiKeyErr({ type: "invalid" }); setPdfUrl(null); setLoading(false); return; }
+                if (res.status === 503 || msg.includes("overloaded") || msg.includes("UNAVAILABLE")) {
+                    throw new Error("AI service temporarily unavailable — please try again.");
+                }
+                throw new Error(msg);
+            }
             const d: MedicalSummary = await res.json();
             setData(d);
             const c = buildContext(d, file.name); setCtx(c);
             const entry: HistoryEntry = { id: Date.now().toString(), date: new Date().toISOString(), fileName: file.name, summary: d.summary, results: d.results };
             const updated = [entry, ...history].slice(0, 25);
             setHistory(updated); saveHistory(updated);
-        } catch (e: any) { setErr(e.message || "Failed to reach backend."); setPdfUrl(null); }
+        } catch (e: any) {
+            if (e.name === "AbortError") { setErr("Request timed out — the AI took too long. Try again."); }
+            else { setErr(e.message || "Failed to reach backend."); }
+            setPdfUrl(null);
+        }
         finally { setLoading(false); }
     }, [history]);
 
@@ -233,12 +290,10 @@ export const Desktop = (): JSX.Element => {
 
     const trendNames = [...new Set(history.flatMap(e => e.results.map(r => r.test_name)))];
 
-    // Card animation style helper
+    // Card style helper — always visible, CSS keyframe handles slide-in
     const card = (i: number, extra?: object): React.CSSProperties => ({
         background: "#1e293b", borderRadius: 22, padding: "26px 28px", marginBottom: 20,
-        opacity: visible.has(i) ? 1 : 0,
-        transform: visible.has(i) ? "translateY(0)" : "translateY(20px)",
-        transition: "opacity 0.45s ease, transform 0.45s ease",
+        animation: data ? `lm-fadein 0.4s ease ${Math.min(i * 0.08, 0.6)}s both` : "none",
         ...extra,
     });
 
@@ -254,6 +309,28 @@ export const Desktop = (): JSX.Element => {
     return (
         <main style={{ background: "linear-gradient(180deg,#152331 0%,#000 100%)", minHeight: "100vh", minWidth: 1440, display: "flex", alignItems: "flex-start", padding: 40, paddingTop: 110, gap: 60, fontFamily: "'Plus Jakarta Sans',sans-serif", boxSizing: "border-box", position: "relative" }}>
 
+            {/* ── API KEY ERROR MODAL ───────────────────── */}
+            {apiKeyErr.type && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setApiKeyErr({ type: null })}>
+                    <div style={{ background: "#1e293b", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 24, padding: 36, maxWidth: 460, width: "90%", position: "relative" }} onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setApiKeyErr({ type: null })} style={{ position: "absolute", top: 14, right: 14, background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 20, cursor: "pointer", lineHeight: 1 }}>✕</button>
+                        <div style={{ fontSize: 36, marginBottom: 14 }}>{apiKeyErr.type === "quota" ? "⚠️" : "🔑"}</div>
+                        <h2 style={{ color: "#fff", fontSize: 20, fontWeight: 700, margin: "0 0 10px" }}>
+                            {apiKeyErr.type === "quota" ? "Rate Limit Reached" : "Invalid API Key"}
+                        </h2>
+                        <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 14, lineHeight: 1.7, margin: "0 0 20px" }}>
+                            {apiKeyErr.type === "quota"
+                                ? "You've hit the Groq free tier rate limit. This is a temporary API limit — not a site issue. Wait a moment and try again, or get a fresh key from Groq console."
+                                : "Your Groq API key is missing or invalid. Add a valid GROQ_API_KEY to your .env file and restart the backend. The site itself is working fine."}
+                        </p>
+                        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                            <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer" style={{ background: "#3b82f6", color: "#fff", padding: "10px 20px", borderRadius: 12, fontSize: 13, fontWeight: 600, textDecoration: "none", fontFamily: "inherit" }}>Get Groq API Key →</a>
+                            <button onClick={() => setApiKeyErr({ type: null })} style={{ background: "rgba(255,255,255,0.08)", border: "none", color: "rgba(255,255,255,0.7)", padding: "10px 20px", borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Dismiss</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ── LOGO TOP LEFT ─────────────────────────── */}
             <div style={{ position: "absolute", top: 18, left: 40, zIndex: 10 }}>
                 <img
@@ -265,7 +342,7 @@ export const Desktop = (): JSX.Element => {
 
             {/* ── LEFT PANEL ────────────────────────────── */}
             <section
-                style={{ width: 432, minHeight: 680, flexShrink: 0, background: "#1e293b", borderRadius: 40, border: `1.5px dashed ${dragging ? "#fff" : "rgba(255,255,255,0.3)"}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: pdfUrl ? "flex-start" : "center", overflow: "hidden", position: "relative", transition: "border-color 0.2s" }}
+                style={{ width: 432, minHeight: 680, flexShrink: 0, marginTop: 10, background: "#1e293b", borderRadius: 40, border: `1.5px dashed ${dragging ? "#fff" : "rgba(255,255,255,0.3)"}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: pdfUrl ? "flex-start" : "center", overflow: "hidden", position: "relative", transition: "border-color 0.2s" }}
                 onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}
             >
                 {pdfUrl ? (
@@ -284,12 +361,13 @@ export const Desktop = (): JSX.Element => {
                         </label>
                         <p style={{ marginTop: 14, color: "rgba(255,255,255,0.28)", fontSize: 12 }}>PDF only · max 20 MB</p>
                         {fileName && !loading && <p style={{ marginTop: 8, color: "rgba(255,255,255,0.45)", fontSize: 12, maxWidth: 280, textAlign: "center" }}>{fileName}</p>}
+
                     </>
                 )}
             </section>
 
             {/* ── RIGHT PANEL ───────────────────────────── */}
-            <section style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, paddingTop: 10 }}>
+            <section id="report-content" style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, paddingTop: 10 }}>
 
                 {/* Header */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
@@ -297,12 +375,14 @@ export const Desktop = (): JSX.Element => {
                         <h1 style={{ color: "#fff", fontSize: 46, fontWeight: 700, margin: "0 0 6px", lineHeight: 1.1, textShadow: "0 0 28px rgba(255,255,255,0.3)" }}>Analysis</h1>
                         <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, margin: 0 }}>Upload a PDF to generate insights</p>
                     </div>
-                    {data && (
-                        <div className="no-print" style={{ display: "flex", gap: 8, paddingTop: 8 }}>
-                            <button style={btn()} onClick={() => setShowHist(true)}><Icons.history /> History</button>
-                            <button style={btn()} onClick={() => window.print()}><Icons.export /> Export PDF</button>
-                        </div>
-                    )}
+                    <div className="no-print" style={{ display: "flex", gap: 8, paddingTop: 8 }}>
+                        <button style={btn()} onClick={() => setShowHist(true)}><Icons.history /> History</button>
+                        {data && (
+                            <button style={{ ...btn(), opacity: isExporting ? 0.7 : 1, cursor: isExporting ? "not-allowed" : "pointer" }} onClick={exportPdf} disabled={isExporting}>
+                                <Icons.export /> {isExporting ? "Exporting..." : "Export PDF"}
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Summary card */}
@@ -314,8 +394,12 @@ export const Desktop = (): JSX.Element => {
                         </div>
                     ) : err ? (
                         <div>
-                            <p style={{ color: "#f87171", fontSize: 15, margin: "0 0 14px", lineHeight: 1.5 }}>{err}</p>
-                            {lastFile && <button onClick={() => doUpload(lastFile)} style={{ background: "#3b82f6", border: "none", borderRadius: 10, padding: "8px 18px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>↺ Retry</button>}
+                            <p style={{ color: err.includes("quota") ? "#fbbf24" : "#f87171", fontSize: 14, margin: "0 0 14px", lineHeight: 1.6 }}>{err}</p>
+                            {err.includes("quota") ? (
+                                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ display: "inline-block", background: "#ca8a04", border: "none", borderRadius: 10, padding: "8px 18px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", textDecoration: "none" }}>Get new API key →</a>
+                            ) : lastFile && (
+                                <button onClick={() => doUpload(lastFile)} style={{ background: "#3b82f6", border: "none", borderRadius: 10, padding: "8px 18px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>↺ Retry</button>
+                            )}
                         </div>
                     ) : data ? (
                         <p style={{ color: "#fff", fontSize: 16, lineHeight: 1.7, margin: 0 }}>{data.summary}</p>
@@ -340,7 +424,16 @@ export const Desktop = (): JSX.Element => {
                 {data && data.results.map((r, i) => (
                     <article key={i} style={card(i + 1)} aria-labelledby={`res-${i}`}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                            <h2 id={`res-${i}`} style={{ color: "#fff", fontSize: 20, fontWeight: 600, margin: 0, textShadow: "0 0 18px rgba(255,255,255,0.2)" }}>{r.test_name}</h2>
+                            {(() => {
+                                let sn = r.test_name, fn = "";
+                                if (sn.includes(" (")) { const p = sn.split(" ("); sn = p[0]; fn = p[1].replace(")", ""); }
+                                return (
+                                    <h2 id={`res-${i}`} style={{ color: "#fff", fontSize: 20, fontWeight: 600, margin: 0, textShadow: "0 0 18px rgba(255,255,255,0.2)", display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                                        {sn}
+                                        {fn && <span style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.45)", textShadow: "none" }}>({fn})</span>}
+                                    </h2>
+                                )
+                            })()}
                             <Badge s={r.status_badge} />
                         </div>
                         <p style={{ color: "#fff", fontSize: 32, fontWeight: 700, margin: "14px 0 4px" }}>{r.value}</p>
@@ -349,20 +442,62 @@ export const Desktop = (): JSX.Element => {
                     </article>
                 ))}
 
-                {/* AI Chat */}
-                {data && (
-                    <div className="no-print" style={card(data.results.length + 1)}>
-                        <h2 style={{ color: "#fff", fontSize: 20, fontWeight: 600, margin: "0 0 18px", textShadow: "0 0 24px rgba(255,255,255,0.3)" }}>Ask Lumina AI</h2>
+            </section>
 
-                        {chat.length > 0 && (
-                            <div style={{ maxHeight: 300, overflowY: "auto", marginBottom: 14, display: "flex", flexDirection: "column", gap: 10, paddingRight: 4 }}>
-                                {chat.map((m, i) => (
-                                    <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
-                                        <div style={{ background: m.role === "user" ? "#3b82f6" : "rgba(255,255,255,0.08)", borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", padding: "10px 14px", maxWidth: "82%", fontSize: 14, color: "#fff", lineHeight: 1.6 }}>
-                                            {m.content}
+            {/* Floating Chat Widget */}
+            {data && (
+                <>
+                    {/* Floating Button */}
+                    <button
+                        className="no-print"
+                        onClick={() => setIsChatOpen(!isChatOpen)}
+                        style={{ position: "fixed", bottom: 24, right: 24, width: 60, height: 60, borderRadius: 30, background: "linear-gradient(135deg, #3b82f6, #2563eb)", border: "none", boxShadow: "0 8px 32px rgba(59,130,246,0.4)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", cursor: "pointer", zIndex: 40, transition: "transform 0.2s" }}
+                        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
+                        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                    >
+                        {isChatOpen ? <Icons.x /> : <Icons.sparkles />}
+                    </button>
+
+                    {/* Chat Window */}
+                    {renderChat && (
+                        <div className="no-print" style={{ position: "fixed", bottom: 100, right: 24, width: 380, maxHeight: 600, background: "rgba(21, 35, 49, 0.95)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, boxShadow: "0 24px 64px rgba(0,0,0,0.4)", zIndex: 40, display: "flex", flexDirection: "column", overflow: "hidden", transformOrigin: "bottom right", animation: isChatOpen ? "lm-fadein 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards" : "lm-fadeout 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards" }}>
+                            
+                            {/* Header */}
+                            <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.02)" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#fff" }}>
+                                    <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px" }}>
+                                        Lumi
+                                    </span>
+                                    <span style={{ display: "flex", color: "#60a5fa" }}>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" /><path d="M20 3v4" /><path d="M22 5h-4" /><path d="M4 17v2" /><path d="M5 18H3" /></svg>
+                                    </span>
+                                </div>
+                                <button onClick={() => setIsChatOpen(false)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex", padding: 4 }}><Icons.x /></button>
+                            </div>
+
+                            {/* Messages */}
+                            <div style={{ maxHeight: 400, overflowY: "auto", padding: "24px 20px 10px", display: "flex", flexDirection: "column", gap: 14 }}>
+                                {chat.length === 0 ? (
+                                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, textAlign: "center", margin: "auto" }}>Ask Lumi anything about your results!</p>
+                                ) : (
+                                    chat.map((m, i) => (
+                                        <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", flexShrink: 0 }}>
+                                            <div style={{ background: m.role === "user" ? "#3b82f6" : "rgba(255,255,255,0.08)", borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", padding: "10px 14px", maxWidth: "85%", fontSize: 14, color: "#fff", lineHeight: 1.5, overflowWrap: "break-word" }}>
+                                                <ReactMarkdown 
+                                                    components={{
+                                                        p: ({node, ...props}) => <p style={{ margin: "0 0 8px" }} {...props} />,
+                                                        ul: ({node, ...props}) => <ul style={{ margin: "0 0 8px", paddingLeft: 20 }} {...props} />,
+                                                        ol: ({node, ...props}) => <ol style={{ margin: "0 0 8px", paddingLeft: 20 }} {...props} />,
+                                                        li: ({node, ...props}) => <li style={{ marginBottom: 4 }} {...props} />,
+                                                        strong: ({node, ...props}) => <strong style={{ fontWeight: 600 }} {...props} />
+                                                    }}
+                                                >
+                                                    {m.content.replace(/(?<!\n)\s*\*\s/g, '\n* ')}
+                                                </ReactMarkdown>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))
+                                )}
                                 {chatLoading && (
                                     <div style={{ display: "flex", gap: 4, padding: "11px 14px", background: "rgba(255,255,255,0.07)", borderRadius: "16px 16px 16px 4px", width: "fit-content" }}>
                                         {[0, 1, 2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.4)", animation: `lm-bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
@@ -370,22 +505,23 @@ export const Desktop = (): JSX.Element => {
                                 )}
                                 <div ref={chatEnd} />
                             </div>
-                        )}
 
-                        <div style={{ display: "flex", gap: 10 }}>
-                            <input
-                                value={chatIn} onChange={e => setChatIn(e.target.value)} onKeyDown={onKey}
-                                placeholder="e.g. What foods help improve my hemoglobin?"
-                                disabled={chatLoading}
-                                style={{ flex: 1, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "12px 16px", color: "#fff", fontSize: 14, fontFamily: "inherit", outline: "none" }}
-                            />
-                            <button onClick={sendChat} disabled={chatLoading || !chatIn.trim()} style={{ background: "#3b82f6", border: "none", borderRadius: 12, padding: "12px 18px", color: "#fff", cursor: chatLoading || !chatIn.trim() ? "not-allowed" : "pointer", opacity: chatLoading || !chatIn.trim() ? 0.5 : 1, display: "flex", alignItems: "center", transition: "opacity 0.2s" }}>
-                                <Icons.send />
-                            </button>
+                            {/* Input */}
+                            <div style={{ padding: "16px 20px 20px", display: "flex", gap: 10 }}>
+                                <input
+                                    value={chatIn} onChange={e => setChatIn(e.target.value)} onKeyDown={onKey}
+                                    placeholder="Ask a question..."
+                                    disabled={chatLoading}
+                                    style={{ flex: 1, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "12px 16px", color: "#fff", fontSize: 14, fontFamily: "inherit", outline: "none" }}
+                                />
+                                <button onClick={sendChat} disabled={chatLoading || !chatIn.trim()} style={{ background: "#3b82f6", border: "none", borderRadius: 12, width: 44, height: 44, padding: 0, color: "#fff", cursor: chatLoading || !chatIn.trim() ? "not-allowed" : "pointer", opacity: chatLoading || !chatIn.trim() ? 0.5 : 1, display: "flex", alignItems: "center", justifyContent: "center", transition: "opacity 0.2s" }}>
+                                    <Icons.send />
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                )}
-            </section>
+                    )}
+                </>
+            )}
 
             {/* ── HISTORY MODAL ─────────────────────────── */}
             {showHist && (
@@ -435,6 +571,8 @@ export const Desktop = (): JSX.Element => {
                 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
                 @keyframes lm-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
                 @keyframes lm-bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
+                @keyframes lm-fadein { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+                @keyframes lm-fadeout { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(20px) scale(0.95); } }
                 ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:999px}
                 @media print {
                     .no-print { display:none!important; }

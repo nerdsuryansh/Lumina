@@ -1,92 +1,58 @@
 <div align="center">
-  
-  <img width="100" height="100" alt="Plugin icon - 1" src="https://github.com/user-attachments/assets/71ea2a8b-3959-47ef-bd9e-8e6007b19656" />
-  <p><strong>A Smart Medical Report Visualizer & Explainer</strong></p>
-  <p>Upload any medical lab report PDF and get instant AI-powered insights like summaries, status badges, visual range bars, and a chat assistant to answer your questions.</p>
-
-  ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)
-  ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat&logo=fastapi&logoColor=white)
-  ![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react&logoColor=black)
-  ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript&logoColor=white)
-  ![Gemini](https://img.shields.io/badge/Gemini_AI-API-4285F4?style=flat&logo=google&logoColor=white)
-  ![Figma](https://img.shields.io/badge/Figma-F24E1E?style=flat&logo=figma&logoColor=white)
+  <img width="100" height="100" alt="Lumina logo" src="https://github.com/user-attachments/assets/71ea2a8b-3959-47ef-bd9e-8e6007b19656" />
+  <h1>Lumina</h1>
+  <p><strong>A beautifully designed medical report visualizer and explainer.</strong></p>
+  <p>Drop a lab report PDF to instantly parse, visualize, and understand your health data.</p>
 </div>
 
 ---
 
-## Features
+## Overview
 
-- **PDF Upload & Preview** — Drag & drop or click to upload. The PDF renders live in the left panel.
-- **AI-Powered Analysis** — Gemini extracts all lab test results and generates a clinical summary automatically.
-- **Visual Range Bars** — Each result shows a glowing dot on a bar indicating where the value falls relative to the normal range.
-- **Status Badges** — Every test is classified as `Low`, `Normal`, or `High` with color-coded badges.
-- **Ask Lumina AI** — Chat with an AI assistant about your report. Ask follow-up questions like *"What foods help improve my hemoglobin?"*
-- **Report History** — All analyzed reports are saved locally. Revisit past results anytime.
-- **Trend View** — Upload multiple reports over time and see how your lab values are trending on a chart.
-- **Export PDF** — Print or save the analysis as a clean PDF report.
+Lumina turns dense, confusing medical PDF reports into clear, visual dashboards. Built for speed and privacy, it uses local parsing and fast LLMs to structure your data, highlight what needs attention, and let you ask natural questions about your health metrics.
 
----
+## Key Features
 
-## Preview
-
-> Upload a medical report → Get instant AI analysis with visual indicators and chat support.
-
----
+- **Visual Range Bars** — Instantly see exactly where your results fall within the normal reference ranges.
+- **Smart Parsing** — Automatically extracts test names, full forms (e.g., MCH, WBC), values, and units from unstructured PDFs.
+- **Lumi AI Assistant** — A sleek, floating chat widget to answer any questions about your specific results.
+- **Local History & Trends** — Your reports are saved locally in your browser. Track how your health markers trend over time.
+- **Print & Export** — Generate clean, formatted PDF summaries to share with your doctor.
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Design** | Custom Figma UI/UX Layout |
-| **Frontend** | React 18 + TypeScript + Vite |
-| **Backend** | Python + FastAPI + Uvicorn |
-| **AI** | Google Gemini API (`gemini-3.5-flash`) |
-| **PDF Parsing** | PyPDF2 |
-| **Styling** | Inline styles + Plus Jakarta Sans |
+- **Frontend**: React 18, TypeScript, Vite, custom Figma UI/UX layout.
+- **Backend**: Python, FastAPI, PyPDF2.
+- **AI Models**: Groq (`llama-3.3-70b-versatile`) for ultra-fast structured extraction and chat.
 
 ---
 
-## Getting Started
+## Running Locally
 
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-- A [Google Gemini API key](https://aistudio.google.com/app/apikey)
-
----
-
-### 1. Clone the repo
+### 1. Backend Setup
 
 ```bash
+# Clone the repository
 git clone https://github.com/your-username/Lumina.git
 cd Lumina
-```
 
-### 2. Set up the backend
-
-```bash
-# Create and activate virtual environment
+# Create a virtual environment and install dependencies
 python3 -m venv .venv
-source .venv/bin/activate      # Windows: .venv\Scripts\activate
-
-# Install dependencies
+source .venv/bin/activate
 pip install -r requirements.txt
 
-# Add your Gemini API key
+# Configure your API key
 cp .env.example .env
-# Then open .env and replace "your_gemini_api_key_here" with your actual key
-# Get a free key at: https://aistudio.google.com/app/apikey
+# Edit .env and add your Groq API key (free at https://console.groq.com)
 
-# Start the backend
+# Start the server
 python main.py
 ```
 
-The API will be live at `http://127.0.0.1:8000`
-
-### 3. Set up the frontend
+### 2. Frontend Setup
 
 ```bash
-# In a new terminal
+# In a new terminal window
 npm install
 npm run dev
 ```
@@ -95,42 +61,6 @@ Open `http://localhost:5173` in your browser.
 
 ---
 
-## 📁 Project Structure
-
-```
-Lumina/
-├── main.py           # FastAPI backend — PDF parsing + Gemini API
-├── index.tsx         # React frontend — full UI
-├── main.tsx          # React entry point
-├── index.html        # HTML shell
-├── vite.config.ts    # Vite bundler config
-├── package.json      # Frontend dependencies
-├── requirements.txt  # Python dependencies
-└── logo.png          # Lumina logo
-```
-
----
-
-## Environment Variables
-
-| Variable | Description |
-|---|---|
-| `GEMINI_API_KEY` | Your Google Gemini API key (required) |
-
----
-
-## Contributing
-
-Pull requests are welcome. For major changes, please open an issue first.
-
----
-
-## License
-
-Copyright (c) 2026 Suryansh Pareek. All Rights Reserved.
-
----
-
 <div align="center">
-  Made with ❤️ by <strong>Suryansh ;)</strong>
+  Designed and built by <strong>Suryansh Pareek</strong>
 </div>

@@ -1,13 +1,16 @@
 import io
 import os
-from dotenv import load_dotenv
-load_dotenv()  # Loads GEMINI_API_KEY from .env file automatically
+import re
+import time
 import json
-from fastapi import FastAPI, File, UploadFile
+from dotenv import load_dotenv
+load_dotenv()
+from fastapi import FastAPI, File, UploadFile, HTTPException
 import uvicorn
 import PyPDF2
 from pydantic import BaseModel
-from google import genai
+
+from groq import Groq
 from typing import Literal, List
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -21,7 +24,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-client = genai.Client(api_key=os.environ.get("AQ.Ab8RN6JErwF5PU1Wb9fQdgMOtwRftJc9_t6O-oscmvkUDobnJA"))
+GROQ_API_KEY   = os.environ.get("GROQ_API_KEY")
+
+groq_client   = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
 # ─── Models ──────────────────────────────────────────────────────────────────
 
@@ -36,7 +41,7 @@ class MedicalSummary(BaseModel):
     results: List[LabResult]
 
 class ChatMessageIn(BaseModel):
-    role: str   # "user" or "assistant"
+    role: str
     content: str
 
 class ChatRequest(BaseModel):
@@ -52,62 +57,91 @@ async def root():
 
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
+    if not groq_client:
+        raise HTTPException(status_code=401, detail="No API key configured — add GROQ_API_KEY to .env")
+
     content = await file.read()
     pdf_reader = PyPDF2.PdfReader(io.BytesIO(content))
     extracted_text = "".join(
         page.extract_text() for page in pdf_reader.pages if page.extract_text()
     )
-    # Truncate to avoid slow requests on large PDFs (lab results are always in first ~8000 chars)
-    extracted_text = extracted_text[:8000]
+    extracted_text = extracted_text[:3000]
 
-    response = client.models.generate_content(
-        model='gemini-3.5-flash',
-        contents=f"""You are a precise medical report analyzer. Extract all lab test results from the text below.
+    if groq_client:
+        for attempt in range(3):
+            try:
+                response = groq_client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": """You are a medical report analyzer. Read the report carefully and extract ALL lab test results that appear in the text. Return ONLY valid JSON.
 
 STRICT STATUS CLASSIFICATION RULES:
 - "Normal": value falls WITHIN the stated reference/normal range (including values like "<1.0" when the reference IS "<1.0")
-- "Low": value is BELOW the minimum of the stated reference range (a deficiency or deficit)
+- "Low": value is BELOW the minimum of the stated reference range
 - "High": value is ABOVE the maximum of the stated reference range
-- If a result has an interpretation table (e.g. hsCRP risk categories), use the category that the value falls into: Low/Moderate/High risk = Normal/Normal/High respectively
-- For "<X" values where the reference is also "<X" or the value satisfies the reference condition, classify as "Normal"
+- If a result has an interpretation table (e.g. hsCRP or Troponin risk categories), use the category that the value falls into: Low/Average/Moderate risk = Normal, High/Persistent risk = High.
+- For "<X" values where the reference is also "<X" or the value satisfies the reference condition, classify as "Normal".
+- CRITICAL: If a test name is listed with a unit (e.g. mg/dL) and a reference range (e.g. <20) but there is NO separate numerical result value given for the patient, it means the result is pending. Do NOT extract it. Do NOT use the reference range as the result. ONLY extract tests that have a clear patient result.
 
-Also write a 2-3 sentence clinical summary of the overall results.
-Respond ONLY with valid JSON. No extra text.
+JSON format:
+{"summary": "2-3 sentence clinical summary", "results": [{"test_name": "exact name (if abbreviation, include full form in brackets, e.g. 'MCH (Mean Corpuscular Hemoglobin)')", "value": "value with unit", "normal_range": "reference range", "status_badge": "Low|Normal|High"}]}"""
+                        },
+                        {
+                            "role": "user",
+                            "content": f"Medical report text:\n{extracted_text}"
+                        }
+                    ],
+                    response_format={"type": "json_object"},
+                    temperature=0.0,
+                    max_tokens=1200,
+                )
+                raw = response.choices[0].message.content
+                data = json.loads(raw)
+                for r in data.get("results", []):
+                    s = r.get("status_badge", "Normal")
+                    r["status_badge"] = s if s in ("Low", "Normal", "High") else "Normal"
+                return data
 
-Medical report text:
-{extracted_text}""",
-        config={
-            'response_mime_type': 'application/json',
-            'response_schema': MedicalSummary,
-        }
-    )
+            except Exception as e:
+                err = str(e)
+                if "401" in err or "authentication" in err.lower():
+                    raise HTTPException(status_code=401, detail="Invalid Groq API key.")
+                if "429" in err or "rate_limit" in err.lower():
+                    if attempt < 2:
+                        match = re.search(r'try again in ([\d.]+)s', err)
+                        wait = float(match.group(1)) + 1 if match else 15
+                        time.sleep(min(wait, 60))
+                        continue
+                    raise HTTPException(status_code=429, detail="Rate limit reached — please wait a moment and try again.")
+                raise HTTPException(status_code=500, detail="Analysis failed — please try again.")
 
-    return json.loads(response.text)
 
 @app.post("/chat/")
 async def chat(req: ChatRequest):
-    # Build conversation history (last 10 messages to avoid token overflow)
-    history_lines = [
-        f"{'User' if m.role == 'user' else 'Assistant'}: {m.content}"
-        for m in req.messages[-10:]
-    ]
-    history_text = "\n".join(history_lines)
+    if not groq_client:
+        raise HTTPException(status_code=401, detail="No API key configured — add GROQ_API_KEY to .env")
 
-    prompt = f"""You are Lumina, a helpful AI medical assistant. The user has uploaded a medical report with these findings:
-
-{req.report_context}
-
-{'Previous conversation:' + chr(10) + history_text if history_text else ''}
-
-User: {req.new_message}
-
-Respond clearly and helpfully. Explain medical terms in plain language. Keep answers concise (2-4 sentences unless more detail is asked for). Do not diagnose — suggest consulting a doctor for medical decisions."""
-
-    response = client.models.generate_content(
-        model='gemini-3.5-flash',
-        contents=prompt
-    )
-    return {"response": response.text}
+    if groq_client:
+        history = [{"role": m.role, "content": m.content} for m in req.messages[-10:]]
+        messages = [
+            {
+                "role": "system",
+                "content": f"You are Lumina, a helpful AI medical assistant. The user uploaded a medical report:\n\n{req.report_context}\n\nExplain medical terms clearly. Keep answers concise. Do not diagnose — suggest consulting a doctor."
+            },
+            *history,
+            {"role": "user", "content": req.new_message}
+        ]
+        try:
+            r = groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=messages,
+                temperature=0.5,
+            )
+            return {"response": r.choices[0].message.content}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail="Chat analysis failed — please try again.")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

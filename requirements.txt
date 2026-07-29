@@ -1,8 +1,7 @@
 fastapi
 uvicorn
 PyPDF2
-google-genai
+groq
 pydantic
 python-multipart
 python-dotenv
-
