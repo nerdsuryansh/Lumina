@@ -15,15 +15,23 @@ Lumina turns dense, confusing medical PDF reports into clear, visual dashboards.
 ## Key Features
 
 - **Visual Range Bars** — Instantly see exactly where your results fall within the normal reference ranges.
+  
 - **Smart Parsing** — Automatically extracts test names, full forms (e.g., MCH, WBC), values, and units from unstructured PDFs.
+  
 - **Lumi AI Assistant** — A sleek, floating chat widget to answer any questions about your specific results.
+
 - **Local History & Trends** — Your reports are saved locally in your browser. Track how your health markers trend over time.
+
 - **Print & Export** — Generate clean, formatted PDF summaries to share with your doctor.
+
+---
 
 ## Tech Stack
 
 - **Frontend**: React 18, TypeScript, Vite, custom Figma UI/UX layout.
+
 - **Backend**: Python, FastAPI, PyPDF2.
+
 - **AI Models**: Groq (`llama-3.3-70b-versatile`) for ultra-fast structured extraction and chat.
 
 ---
