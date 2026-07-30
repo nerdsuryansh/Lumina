@@ -84,9 +84,12 @@ STRICT STATUS CLASSIFICATION RULES:
 - If a result has an interpretation table (e.g. hsCRP or Troponin risk categories), use the category that the value falls into: Low/Average/Moderate risk = Normal, High/Persistent risk = High.
 - For "<X" values where the reference is also "<X" or the value satisfies the reference condition, classify as "Normal".
 - CRITICAL: If a test name is listed with a unit (e.g. mg/dL) and a reference range (e.g. <20) but there is NO separate numerical result value given for the patient, it means the result is pending. Do NOT extract it. Do NOT use the reference range as the result. ONLY extract tests that have a clear patient result.
+- CRITICAL ACRONYM RULE: If a test name is an acronym or abbreviation (like WBC, MCV, LDL, hsCRP), you MUST provide its full expanded medical name in parentheses, even if it is not written in the report. Format exactly as: "Acronym (Full Form)", for example: "WBC (White Blood Cells)" or "HDL (High-Density Lipoprotein)". EVERY abbreviation must have a full form.
+
+- CRITICAL SUMMARY RULE: For the `summary` field, write a comprehensive, highly empathetic, and patient-friendly medical summary (3-5 sentences). Write directly to the patient ("Your report indicates..."). Explicitly highlight any High or Low out-of-range results and explain what they generally mean in simple, reassuring terms. Acknowledge the normal results to provide peace of mind. Avoid overly dense medical jargon.
 
 JSON format:
-{"summary": "2-3 sentence clinical summary", "results": [{"test_name": "exact name (if abbreviation, include full form in brackets, e.g. 'MCH (Mean Corpuscular Hemoglobin)')", "value": "value with unit", "normal_range": "reference range", "status_badge": "Low|Normal|High"}]}"""
+{"summary": "A comprehensive, empathetic, patient-friendly summary (3-5 sentences)", "results": [{"test_name": "Acronym (Full Form)", "value": "value with unit", "normal_range": "reference range", "status_badge": "Low|Normal|High"}]}"""
                         },
                         {
                             "role": "user",
