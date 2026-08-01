@@ -34,9 +34,9 @@ Lumina turns dense, confusing medical PDF reports into clear, visual dashboards.
 
 - **Frontend**: React 18, TypeScript, Vite, custom Figma UI/UX layout.
 
-- **Backend**: Python, FastAPI, PyPDF2.
+- **Backend**: Python, FastAPI, PyPDF2 (Hosted as Native Vercel Serverless Functions).
 
-- **AI Models**: Groq (`llama-3.3-70b-versatile` by default) for ultra-fast structured extraction and chat.
+- **AI Models**: Groq (`llama-3.1-8b-instant` by default) for ultra-fast structured extraction and chat.
 
 ---
 
@@ -46,7 +46,7 @@ Lumina turns dense, confusing medical PDF reports into clear, visual dashboards.
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/Lumina.git
+git clone https://github.com/nerdsuryansh/Lumina.git
 cd Lumina
 
 # Create a virtual environment and install dependencies
@@ -58,8 +58,8 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edit .env and add your Groq API key (free at https://console.groq.com)
 
-# Start the server
-python main.py
+# Start the server (Now running as a Vercel Serverless API)
+python api/index.py
 ```
 
 ### 2. Frontend Setup
