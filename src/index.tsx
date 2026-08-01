@@ -242,8 +242,8 @@ const Skel = ({ w, h }: { w: string | number; h: number }) => (
 // ─── Main ────────────────────────────────────────────────────────────────────
 
 
-const API_BASE_URL = "https://srnshprk.pythonanywhere.com";
-// const API_BASE_URL = "https://your-backend.onrender.com"; // Uncomment for production
+const API_BASE_URL = "";
+// const API_BASE_URL = "http://127.0.0.1:8000"; // Uncomment for local development
 
 export const Desktop = (): JSX.Element => {
     const fileRef = useRef<HTMLInputElement>(null);

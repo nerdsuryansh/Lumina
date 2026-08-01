@@ -55,11 +55,11 @@ class ChatRequest(BaseModel):
 
 # ─── Routes ──────────────────────────────────────────────────────────────────
 
-@app.get("/")
+@app.get("/api/")
 async def root():
     return {"status": "Lumina Backend is live!"}
 
-@app.post("/upload/")
+@app.post("/api/upload/")
 async def upload_file(req: Request, file: UploadFile = File(...), model: str = Form("llama-3.1-8b-instant")):
     auth_header = req.headers.get("Authorization")
     client = groq_client
@@ -142,7 +142,7 @@ JSON format:
                 raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 
-@app.post("/chat/")
+@app.post("/api/chat/")
 async def chat(req: Request, chat_req: ChatRequest):
     auth_header = req.headers.get("Authorization")
     client = groq_client
