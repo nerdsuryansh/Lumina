@@ -10,7 +10,7 @@
 
 Lumina turns dense, confusing medical PDF reports into clear, visual dashboards. Built for speed and privacy, it uses local parsing and fast LLMs to structure your data, highlight what needs attention, and let you ask natural questions about your health metrics.
 
-![Lumina Demo](./public/demo.gif)
+<video src="./public/demo.mp4" autoplay loop muted playsinline width="100%"></video>
 
 ## Key Features
 
