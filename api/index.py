@@ -78,7 +78,7 @@ async def upload_file(req: Request, file: UploadFile = File(...), model: str = F
     extracted_text = "".join(
         page.extract_text() for page in pdf_reader.pages if page.extract_text()
     )
-    extracted_text = extracted_text[:3000]
+    extracted_text = extracted_text[:60000]
 
     if client:
         for attempt in range(3):
