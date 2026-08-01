@@ -14,6 +14,8 @@ Lumina turns dense, confusing medical PDF reports into clear, visual dashboards.
 
 ## Key Features
 
+- **Responsive Mobile Layout** — Beautifully optimized for mobile screens. Upload, read, and chat with your medical reports effortlessly on the go.
+  
 - **Visual Range Bars** — Instantly see exactly where your results fall within the normal reference ranges.
   
 - **Smart Parsing** — Automatically extracts test names, full forms (e.g., MCH, WBC), values, and units from unstructured PDFs.
@@ -21,6 +23,8 @@ Lumina turns dense, confusing medical PDF reports into clear, visual dashboards.
 - **Lumi AI Assistant** — A sleek, floating chat widget to answer any questions about your specific results.
 
 - **Local History & Trends** — Your reports are saved locally in your browser. Track how your health markers trend over time.
+
+- **Bring Your Own Key (BYOK)** — Configure your own Groq API key and seamlessly switch between models directly from the Settings menu.
 
 - **Print & Export** — Generate clean, formatted PDF summaries to share with your doctor.
 
@@ -32,7 +36,7 @@ Lumina turns dense, confusing medical PDF reports into clear, visual dashboards.
 
 - **Backend**: Python, FastAPI, PyPDF2.
 
-- **AI Models**: Groq (`llama-3.3-70b-versatile`) for ultra-fast structured extraction and chat.
+- **AI Models**: Groq (`llama-3.3-70b-versatile` by default) for ultra-fast structured extraction and chat.
 
 ---
 
