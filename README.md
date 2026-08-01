@@ -20,7 +20,7 @@ Lumina turns dense, confusing medical PDF reports into clear, visual dashboards.
   
 - **Smart Parsing** — Automatically extracts test names, full forms (e.g., MCH, WBC), values, and units from unstructured PDFs.
   
-- **Lumi AI Bar** — A sleek, inline AI search bar at the bottom of your screen to answer any questions about your specific results instantly.
+- **Lumi AI Bar** — A sleek, inline AI search bar at the top of your analysis report to answer any questions about your specific results instantly.
 
 - **Local History & Trends** — Your reports are saved locally in your browser. Track how your health markers trend over time.
 
