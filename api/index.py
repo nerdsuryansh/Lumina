@@ -60,7 +60,7 @@ async def root():
     return {"status": "Lumina Backend is live!"}
 
 @app.post("/api/upload/")
-async def upload_file(req: Request, file: UploadFile = File(...), model: str = Form("llama-3.1-8b-instant")):
+async def upload_file(req: Request, file: UploadFile = File(...), model: str = Form("llama-3.3-70b-versatile")):
     auth_header = req.headers.get("Authorization")
     client = groq_client
     if auth_header and auth_header.startswith("Bearer "):

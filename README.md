@@ -36,7 +36,7 @@ Lumina turns dense, confusing medical PDF reports into clear, visual dashboards.
 
 - **Backend**: Python, FastAPI, PyPDF2 (Hosted as Native Vercel Serverless Functions).
 
-- **AI Models**: Groq (`llama-3.1-8b-instant` by default) for ultra-fast structured extraction and chat.
+- **AI Models**: Groq (`llama-3.3-70b-versatile` by default) for ultra-fast structured extraction and chat.
 
 ---
 
