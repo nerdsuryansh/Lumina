@@ -369,7 +369,7 @@ export const Desktop = (): JSX.Element => {
     }, [chat]);
 
     const doUpload = useCallback(async (file: File) => {
-        if (file.size > 20 * 1024 * 1024) { setErr("File too large — max 20 MB."); return; }
+        if (file.size > 4.5 * 1024 * 1024) { setErr("File too large for Vercel's free tier (Max 4.5MB). Medical text PDFs are usually <1MB."); return; }
         setLoading(true); setErr(null); setData(null); setChat([]); setIsPdfHidden(true);
         setPdfUrl(URL.createObjectURL(file));
         const fd = new FormData(); fd.append("file", file);
