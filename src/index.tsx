@@ -376,7 +376,7 @@ export const Desktop = (): JSX.Element => {
         try {
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 120000);
-            const res = await fetch("http://127.0.0.1:8000/upload/", { method: "POST", headers, body: fd, signal: controller.signal });
+            const res = await fetch(`${API_BASE_URL}/upload/`, { method: "POST", headers, body: fd, signal: controller.signal });
             clearTimeout(timeout);
             if (res.status === 401) { setApiKeyErr({ type: "invalid" }); setPdfUrl(null); setLoading(false); setIsPdfHidden(false); return; }
             if (!res.ok) {
@@ -448,7 +448,7 @@ export const Desktop = (): JSX.Element => {
         try {
             const headers: Record<string, string> = { "Content-Type": "application/json" };
             if (customApiKey) headers["Authorization"] = `Bearer ${customApiKey}`;
-            const res = await fetch("http://127.0.0.1:8000/chat/", {
+            const res = await fetch(`${API_BASE_URL}/chat/`, {
                 method: "POST", headers,
                 body: JSON.stringify({ report_context: ctx, messages: chat.map(m => ({ role: m.role, content: m.content })), new_message: msg, model: selectedModel }),
             });
