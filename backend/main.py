@@ -197,3 +197,10 @@ async def chat(req: Request, chat_req: ChatRequest):
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+
+# WSGI Wrapper for PythonAnywhere
+try:
+    from a2wsgi import ASGIMiddleware
+    application = ASGIMiddleware(app)
+except ImportError:
+    pass

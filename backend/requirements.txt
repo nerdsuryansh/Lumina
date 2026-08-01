@@ -5,3 +5,4 @@ groq
 pydantic
 python-multipart
 python-dotenv
+a2wsgi
