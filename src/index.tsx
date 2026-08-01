@@ -697,7 +697,7 @@ export const Desktop = (): JSX.Element => {
                                 <Icons.upload />
                                 {loading ? "Analyzing…" : (cooldown > 0 ? `Rate limit cooldown: ${cooldown}s` : "Drag & Drop Medical Report")}
                             </label>
-                            <p style={{ marginTop: 14, color: "rgba(255,255,255,0.28)", fontSize: 12 }}>PDF only · max 20 MB</p>
+                            <p style={{ marginTop: 14, color: "rgba(255,255,255,0.28)", fontSize: 12 }}>PDF only · max 4.5 MB</p>
                             {fileName && !loading && <p style={{ marginTop: 8, color: "rgba(255,255,255,0.45)", fontSize: 12, maxWidth: 280, textAlign: "center" }}>{fileName}</p>}
                         </>
                     )}
