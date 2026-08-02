@@ -80,10 +80,6 @@ Open `http://localhost:5173` in your browser.
 
 ---
 
-<div align="center">
-  Designed and built by <strong>Suryansh Pareek</strong>
-</div>
-
 ## License
 
 Copyright (c) 2026 Suryansh Pareek. All Rights Reserved.
