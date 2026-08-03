@@ -16,19 +16,19 @@ https://github.com/user-attachments/assets/6976b5c2-2279-4595-ba7b-22258705bd9b
 
 ## Key Features
 
-- **Responsive Mobile Layout** — Beautifully optimized for mobile screens. Upload, read, and chat with your medical reports effortlessly on the go.
+- **Responsive Mobile Layout** : Beautifully optimized for mobile screens. Upload, read, and chat with your medical reports effortlessly on the go.
   
-- **Visual Range Bars** — Instantly see exactly where your results fall within the normal reference ranges.
+- **Visual Range Bars** : Instantly see exactly where your results fall within the normal reference ranges.
   
-- **Smart Parsing** — Automatically extracts test names, full forms (e.g., MCH, WBC), values, and units from unstructured PDFs.
+- **Smart Parsing** : Automatically extracts test names, full forms (e.g., MCH, WBC), values, and units from unstructured PDFs.
   
-- **Lumi AI Bar** — A sleek, inline AI search bar at the top of your analysis report to answer any questions about your specific results instantly.
+- **Lumi AI Bar** : A sleek, inline AI search bar at the top of your analysis report to answer any questions about your specific results instantly.
 
-- **Local History & Trends** — Your reports are saved locally in your browser. Track how your health markers trend over time.
+- **Local History & Trends** : Your reports are saved locally in your browser. Track how your health markers trend over time.
 
-- **Bring Your Own Key (BYOK)** — Configure your own Groq API key and seamlessly switch between models directly from the Settings menu.
+- **Bring Your Own Key (BYOK)** : Configure your own Groq API key and seamlessly switch between models directly from the Settings menu.
 
-- **Print & Export** — Generate clean, formatted PDF summaries to share with your doctor.
+- **Print & Export** : Generate clean, formatted PDF summaries to share with your doctor.
 
 ##
 
