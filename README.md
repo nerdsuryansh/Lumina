@@ -36,7 +36,7 @@ https://github.com/user-attachments/assets/6976b5c2-2279-4595-ba7b-22258705bd9b
 
 - **Frontend**: React 18, TypeScript, Vite, custom Figma UI/UX layout.
 
-- **Backend**: Python, FastAPI, PyPDF2 (Hosted as Native Vercel Serverless Functions).
+- **Backend**: Python, FastAPI, PyPDF2.
 
 - **AI Models**: Groq (`llama-3.3-70b-versatile` by default) for ultra-fast structured extraction and chat.
 
